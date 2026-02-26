@@ -101,9 +101,9 @@ tailwind.config = {
     margin-left: 4px;
   }
   
-  /* 背景网格效果 - 修复：叠加在深色背景上 */
+  /* 背景网格效果 */
   .bg-grid {
-    background-color: #0B1120; /* 恢复核心深色背景 */
+    background-color: #0B1120;
     background-image: 
       linear-gradient(rgba(0, 112, 243, 0.1) 1px, transparent 1px),
       linear-gradient(90deg, rgba(0, 112, 243, 0.1) 1px, transparent 1px);
@@ -118,11 +118,30 @@ tailwind.config = {
     transform: scale(1.1) rotate(5deg);
     color: #00E5FF;
   }
+
+  /* 社交图标悬停动画 */
+  .social-icon {
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 112, 243, 0.3);
+    background-color: rgba(21, 27, 41, 0.8);
+  }
+  .social-icon:hover {
+    transform: scale(1.15);
+    color: #00E5FF !important;
+    border-color: #00E5FF;
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+  }
 </style>
 </head>
 <body class="bg-darkbg text-gray-100 min-h-screen bg-grid">
 
-<!-- Navbar - 滚动动态效果 -->
+<!-- 导航栏（移除社交图标，保持简洁） -->
 <nav id="navbar" class="fixed w-full bg-darkbg/90 backdrop-blur-sm border-b border-gray-800 py-4 px-6 z-50 transition-all duration-300">
   <div class="max-w-6xl mx-auto flex justify-between items-center">
     <div class="text-xl font-bold flex items-center gap-2 group">
@@ -143,7 +162,7 @@ tailwind.config = {
   </div>
 </nav>
 
-<!-- Hero - 核心视觉动画 -->
+<!-- 首页hero -->
 <section id="home" class="pt-40 pb-24 px-6 fade-in">
   <div class="max-w-6xl mx-auto text-center">
     <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight animate-float">
@@ -154,12 +173,10 @@ tailwind.config = {
       AgentLink - 做AI落地最后一公里的摆渡人
     </p>
     <div class="flex justify-center gap-4 flex-col sm:flex-row">
-      <!-- 跳转按钮 - 悬停动画 -->
       <a href="https://your-company-website.com" target="_blank" class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg transition hover:scale-105 hover:shadow-lg hover:shadow-primary/20 flex items-center justify-center gap-2 group">
         <i class="fa-solid fa-rocket group-hover:animate-bounce"></i>
         Start Building with AgentLink
       </a>
-      <!-- 弹窗按钮 - 悬停动画 -->
       <button onclick="openModal()" class="bg-card border border-gray-700 hover:border-primary text-white px-6 py-3 rounded-lg transition hover:scale-105 hover:shadow-lg hover:shadow-primary/10 flex items-center justify-center gap-2 group">
         <i class="fa-solid fa-book-open group-hover:rotate-6"></i>
         AgentLink Docs
@@ -168,7 +185,7 @@ tailwind.config = {
   </div>
 </section>
 
-<!-- Skills - 卡片悬浮动画 -->
+<!-- 技能板块 -->
 <section id="skills" class="py-20 px-6 bg-card/50 fade-in">
   <div class="max-w-6xl mx-auto">
     <div class="text-center mb-16">
@@ -176,19 +193,16 @@ tailwind.config = {
       <p class="text-gray-400">基于AgentLink构建专业、可扩展、工业级的 AI 智能体</p>
     </div>
     <div class="grid md:grid-cols-3 gap-8">
-      <!-- 卡片1 - 悬浮动画 -->
       <div class="p-8 rounded-2xl bg-card border border-gray-800 hover:border-primary/40 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-2 group">
         <div class="text-3xl text-primary mb-4 group-hover:text-neon transition-colors"><i class="fa-solid fa-code"></i></div>
         <h3 class="text-xl font-semibold mb-2 gradient-text">AgentLink Custom Skills</h3>
         <p class="text-gray-400">为AgentLink设计 Claude Skills / GPTs / 行业专属 Agent 能力</p>
       </div>
-      <!-- 卡片2 - 悬浮动画 -->
       <div class="p-8 rounded-2xl bg-card border border-gray-800 hover:border-primary/40 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-2 group">
         <div class="text-3xl text-primary mb-4 group-hover:text-neon transition-colors"><i class="fa-solid fa-gears"></i></div>
         <h3 class="text-xl font-semibold mb-2 gradient-text">AgentLink AI Workflow</h3>
         <p class="text-gray-400">基于AgentLink构建自动化多步骤 AI 执行流程与工具调用</p>
       </div>
-      <!-- 卡片3 - 悬浮动画 -->
       <div class="p-8 rounded-2xl bg-card border border-gray-800 hover:border-primary/40 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-2 group">
         <div class="text-3xl text-primary mb-4 group-hover:text-neon transition-colors"><i class="fa-solid fa-desktop"></i></div>
         <h3 class="text-xl font-semibold mb-2 gradient-text">AgentLink Frontend</h3>
@@ -198,7 +212,7 @@ tailwind.config = {
   </div>
 </section>
 
-<!-- Workflow - 数字动效 -->
+<!-- 工作流程 -->
 <section id="workflow" class="py-20 px-6 fade-in">
   <div class="max-w-6xl mx-auto text-center">
     <h2 class="text-3xl font-bold mb-10 gradient-text">AgentLink Development Workflow</h2>
@@ -227,7 +241,7 @@ tailwind.config = {
   </div>
 </section>
 
-<!-- Team - 团队成员介绍（仅修复头像显示问题） -->
+<!-- 团队板块 -->
 <section id="team" class="py-20 px-6 bg-card/50 fade-in">
   <div class="max-w-6xl mx-auto">
     <div class="text-center mb-16">
@@ -235,7 +249,6 @@ tailwind.config = {
       <p class="text-gray-400">专注AI Agent开发的极客团队</p>
     </div>
     <div class="grid md:grid-cols-4 gap-8">
-      <!-- 成员1 - 狐狸（产品）- 替换为免费版图标 -->
       <div class="p-8 rounded-2xl bg-card border border-gray-800 hover:border-primary/40 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-2 member-card text-center">
         <div class="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 member-avatar">
           <i class="fa-solid fa-cat text-5xl text-primary"></i>
@@ -244,7 +257,6 @@ tailwind.config = {
         <p class="text-sm text-gray-400 mb-3">产品负责人</p>
         <p class="text-xs text-gray-500">精准洞察AI场景需求</p>
       </div>
-      <!-- 成员2 - 猫头鹰（算法）- 替换为免费版图标 -->
       <div class="p-8 rounded-2xl bg-card border border-gray-800 hover:border-primary/40 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-2 member-card text-center">
         <div class="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 member-avatar">
           <i class="fa-solid fa-dove text-5xl text-primary"></i>
@@ -253,7 +265,6 @@ tailwind.config = {
         <p class="text-sm text-gray-400 mb-3">算法工程师</p>
         <p class="text-xs text-gray-500">大模型智能体核心研发</p>
       </div>
-      <!-- 成员3 - 猎豹（开发）- 替换为免费版图标 -->
       <div class="p-8 rounded-2xl bg-card border border-gray-800 hover:border-primary/40 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-2 member-card text-center">
         <div class="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 member-avatar">
           <i class="fa-solid fa-hippo text-5xl text-primary"></i>
@@ -262,7 +273,6 @@ tailwind.config = {
         <p class="text-sm text-gray-400 mb-3">Agent部署</p>
         <p class="text-xs text-gray-500">极致丝滑运行打造者</p>
       </div>
-      <!-- 成员4 - 蜜蜂（运营）- 替换为免费版图标 -->
       <div class="p-8 rounded-2xl bg-card border border-gray-800 hover:border-primary/40 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-2 member-card text-center">
         <div class="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 member-avatar">
           <i class="fa-solid fa-horse text-5xl text-primary"></i>
@@ -275,36 +285,50 @@ tailwind.config = {
   </div>
 </section>
 
-<!-- Contact - 按钮动画 -->
+<!-- 联系板块（核心：底部社交图标） -->
 <section id="contact" class="py-24 px-6 bg-card/70 fade-in">
   <div class="max-w-4xl mx-auto text-center">
-    <h2 class="text-3xl font-bold mb-4 gradient-text">Build Your Agent with AgentLink</h2>
-    <p class="text-gray-400 mb-8">AgentLink - 专注大模型应用、智能体开发、企业级 AI 工作流</p>
-    <button onclick="openModal()" class="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-lg transition hover:scale-105 hover:shadow-xl hover:shadow-primary/20 active:scale-95 flex items-center justify-center gap-2 mx-auto group">
+    <h2 class="text-4xl font-bold mb-6 gradient-text">Contact Us</h2>
+    <p class="text-lg text-gray-400 mb-12 max-w-2xl mx-auto">
+      AgentLink - 专注大模型应用、智能体开发、企业级 AI 工作流<br>
+      欢迎通过以下渠道联系我们，一起探索 AI Agent 的无限可能
+    </p>
+    
+    <!-- 核心社交图标区域 -->
+    <div class="flex justify-center gap-8 mb-12">
+      <a href="https://github.com" target="_blank" class="text-primary social-icon" title="GitHub">
+        <i class="fa-brands fa-github text-2xl"></i>
+      </a>
+      <a href="https://twitter.com" target="_blank" class="text-primary social-icon" title="Twitter/X">
+        <i class="fa-brands fa-twitter text-2xl"></i>
+      </a>
+      <a href="https://xiaohongshu.com" target="_blank" class="text-primary social-icon" title="小红书">
+        <i class="fa-solid fa-book-open-reader text-2xl"></i>
+      </a>
+    </div>
+    
+    <button onclick="openModal()" class="bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-lg transition hover:scale-105 hover:shadow-xl hover:shadow-primary/20 active:scale-95 flex items-center justify-center gap-2 mx-auto text-lg group">
       <i class="fa-solid fa-paper-plane group-hover:animate-pulse"></i>
-      Contact AgentLink Team
+      Get In Touch With AgentLink Team
     </button>
   </div>
 </section>
 
-<!-- 弹窗 - 淡入动画 -->
+<!-- 弹窗 -->
 <div id="modal" class="modal-backdrop">
   <div class="modal-content absolute top-1/2 left-1/2 w-full max-w-lg bg-card border border-gray-700 rounded-2xl p-8 shadow-xl transform scale-95">
     <div class="flex justify-between items-center mb-4">
       <h3 class="text-xl font-bold gradient-text">AgentLink Developer Portal</h3>
       <button onclick="closeModal()" class="text-gray-400 hover:text-white text-xl transition hover:rotate-90">&times;</button>
     </div>
-    <p class="text-gray-300 mb-6">欢迎使用 AgentLink 开发平台<br> wechat/ redbook </p>
+    <p class="text-gray-300 mb-6">欢迎使用 AgentLink 开发平台<br> 扫码关注我们：wechat/ redbook </p>
     <div class="flex justify-end gap-3">
       <button onclick="closeModal()" class="px-4 py-2 border border-gray-600 rounded hover:border-primary transition hover:scale-105">关闭</button>
-      <!--
-      <a href="https://your-link.com" target="_blank" class="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 transition hover:scale-105">前往官网</a>
-      -->
     </div>
   </div>
 </div>
 
-<!-- Footer -->
+<!-- 页脚（简洁版，无重复图标） -->
 <footer class="bg-darkbg border-t border-gray-800 py-8 text-center text-gray-500 text-sm">
   © 2026 <span class="gradient-text">AgentLink</span> AI Agent Developer Platform • All Rights Reserved
 </footer>
