@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentLink - AI Agent 摆渡人</title>
+<!-- 引入现代字体 Inter -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        primary: '#0070F3',
+        secondary: '#10B981',
+        neon: '#00E5FF',
+        darkbg: '#0B1120',
+        card: '#151B29',
+        cardHover: '#1E293B',
+        accent: '#7C3AED',
+      },
+      fontFamily: {
+        inter: ['Inter', 'sans-serif'], // 添加 Inter 字体
+      },
+      animation: {
+        'blink': 'blink 1s step-end infinite',
+        'float': 'float 3s ease-in-out infinite',
+        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'gradient-x': 'gradient-x 15s ease infinite',
+        'gradient-rotate': 'gradient-rotate 20s linear infinite',
+        'spin-slow': 'spin 8s linear infinite',
+      },
+      keyframes: {
+        blink: {
+          'from, to': { opacity: 0.2 },
+          '50%': { opacity: 1 },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        gradient-x: {
+          '0%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+          '100%': { backgroundPosition: '0% 50%' },
+        },
+        gradient-rotate: {
+          '0%': { backgroundPosition: '0% 0%' },
+          '50%': { backgroundPosition: '100% 100%' },
+          '100%': { backgroundPosition: '0% 0%' },
+        }
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        'gradient-mesh': 'linear-gradient(135deg, #0070F3 0%, #00E5FF 25%, #7C3AED 50%, #0070F3 75%, #00E5FF 100%)',
+      },
+      boxShadow: {
+        'glow': '0 0 15px rgba(0, 112, 243, 0.5), 0 0 25px rgba(0, 229, 255, 0.3)',
+        'glow-hover': '0 0 20px rgba(0, 112, 243, 0.7), 0 0 30px rgba(0, 229, 255, 0.5)',
+        'card': '0 4px 20px rgba(0, 0, 0, 0.2)',
+        'card-hover': '0 8px 30px rgba(0, 0, 0, 0.3)',
+      }
+    }
+  }
+}
+</script>
+<style>
+  /* 基础字体样式 - 全局应用 Inter 字体 */
+  body {
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* 基础动画样式 */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 99;
+    backdrop-filter: blur(5px);
+    transition: background 0.3s ease;
+  }
+  .modal-content {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .modal-backdrop.show .modal-content {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  
+  /* 滚动渐入动画 */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  /* 渐变文字增强 */
+  .gradient-text {
+    background: linear-gradient(90deg, #0070F3, #00E5FF, #7C3AED);
+    background-size: 300% 300%;
+    animation: gradient-x 15s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    position: relative;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  
+  /* 终端光标优化 */
+  .terminal-cursor {
+    display: inline-block;
+    width: 10px;
+    height: 20px;
+    background: linear-gradient(180deg, #0070F3, #00E5FF);
+    animation: blink 1s infinite;
+    margin-left: 6px;
+    border-radius: 1px;
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+  }
+  
+  /* 背景网格效果增强 */
+  .bg-grid {
+    background-color: #0B1120;
+    background-image: 
+      linear-gradient(rgba(0, 112, 243, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 112, 243, 0.1) 1px, transparent 1px),
+      radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.05) 0%, transparent 80%);
+    background-size: 20px 20px, 20px 20px, 100% 100%;
+    position: relative;
+  }
+  
+  /* 背景装饰元素 */
+  .bg-grid::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 20% 80%, rgba(0, 112, 243, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(124, 58, 237, 0.1) 0%, transparent 50%);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* 团队成员头像动画增强 */
+  .member-avatar {
+    transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background: linear-gradient(135deg, rgba(0, 112, 243, 0.1), rgba(0, 229, 255, 0.1));
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+  .member-card:hover .member-avatar {
+    transform: scale(1.15) rotate(5deg);
+    color: #00E5FF;
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+    background: linear-gradient(135deg, rgba(0, 112, 243, 0.2), rgba(0, 229, 255, 0.2));
+  }
+
+  /* 社交图标悬停动画增强 */
+  .social-icon {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 112, 243, 0.3);
+    background: linear-gradient(135deg, rgba(21, 27, 41, 0.9), rgba(30, 41, 59, 0.9));
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .social-icon::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.2), transparent);
+    transition: left 0.6s ease;
+  }
+  
+  .social-icon:hover {
+    transform: scale(1.15) rotate(5deg);
+    color: #00E5FF !important;
+    border-color: #00E5FF;
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+  }
+  
+  .social-icon:hover::before {
+    left: 100%;
+  }
+
+  /* 团队规划项动画增强 */
+  .plan-item {
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .plan-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.05), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.8s ease;
+  }
+  
+  .plan-item:hover {
+    transform: translateX(10px) translateY(-5px);
+    border-left-color: #00E5FF;
+    box-shadow: 0 8px 25px rgba(0, 229, 255, 0.15);
+    background-color: #1E293B;
+  }
+  
+  .plan-item:hover::before {
+    transform: translateX(100%);
+  }
+
+  /* 按钮样式增强 */
+  .btn-primary {
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s ease;
+    z-index: -1;
+  }
+  
+  .btn-primary:hover::before {
+    left: 100%;
+  }
+
+  /* 导航栏链接下划线动画优化 */
+  .nav-link::after {
+    transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  /* 卡片悬浮效果 */
+  .member-card {
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .member-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(0, 112, 243, 0.05), rgba(0, 229, 255, 0.05));
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    z-index: 0;
+  }
+  
+  .member-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(0, 112, 243, 0.6);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  }
+  
+  .member-card:hover::before {
+    opacity: 1;
+  }
+
+  /* 滚动条美化 */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #0B1120;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #0070F3, #00E5FF);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #0056b3, #00c4e6);
+  }
+
+  /* 字体层级优化 */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+  }
+  
+  p {
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+  }
+  
+  .nav-link {
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+  
+  .member-card p {
+    line-height: 1.7;
+    letter-spacing: 0.01em;
+  }
+  
+  .plan-item p {
+    line-height: 1.7;
+    letter-spacing: 0.01em;
+  }
+</style>
+</head>
+<body class="bg-darkbg text-gray-100 min-h-screen bg-grid font-inter">
+
+<!-- 导航栏（优化样式和交互） -->
+<nav id="navbar" class="fixed w-full bg-darkbg/95 backdrop-blur-md border-b border-gray-800/80 py-4 px-6 z-50 transition-all duration-500">
+  <div class="max-w-6xl mx-auto flex justify-between items-center">
+    <div class="text-xl font-bold flex items-center gap-2 group">
+      <i class="fa-solid fa-link text-primary animate-pulse-slow group-hover:rotate-12 transition-transform duration-500"></i>
+      <span class="gradient-text text-xl">AgentLink</span>
+      <span class="text-xs text-gray-400 ml-2 opacity-80">AI Agent 摆渡人</span>
+    </div>
+    <div class="hidden md:flex gap-8">
+      <a href="#home" class="hover:text-neon transition nav-link relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-gradient-to-r after:from-primary after:to-neon after:transition-all hover:after:w-full">Home</a>
+      <a href="#skills" class="hover:text-neon transition nav-link relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-gradient-to-r after:from-primary after:to-neon after:transition-all hover:after:w-full">Skills</a>
+      <a href="#workflow" class="hover:text-neon transition nav-link relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-gradient-to-r after:from-primary after:to-neon after:transition-all hover:after:w-full">Plan</a>
+      <a href="#team" class="hover:text-neon transition nav-link relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-gradient-to-r after:from-primary after:to-neon after:transition-all hover:after:w-full">Team</a>
+      <a href="#contact" class="hover:text-neon transition nav-link relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-gradient-to-r after:from-primary after:to-neon after:transition-all hover:after:w-full">Contact</a>
+    </div>
+    <div class="md:hidden text-primary hover:text-neon transition hover:scale-110">
+      <i class="fa-solid fa-bars text-xl"></i>
+    </div>
+  </div>
+</nav>
+
+<!-- 首页hero（增强视觉效果） -->
+<section id="home" class="pt-40 pb-24 px-6 fade-in">
+  <div class="max-w-6xl mx-auto text-center">
+    <h1 class="text-4xl md:text-7xl font-bold mb-8 leading-tight animate-float">
+      <span class="gradient-text">AgentLink</span><br>
+      Let AI Become Your Life Companion. <span class="terminal-cursor"></span>
+    </h1>
+    <p class="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-12 leading-relaxed">
+      AgentLink - 做AI落地最后一公里的摆渡人，让智能触手可及
+    </p>
+    <div class="flex justify-center gap-6 flex-col sm:flex-row">
+      <a href="https://your-company-website.com" target="_blank" class="bg-gradient-to-r from-primary to-neon hover:from-primary/90 hover:to-neon/90 text-white px-8 py-4 rounded-lg transition hover:scale-105 hover:shadow-glow active:scale-95 flex items-center justify-center gap-2 group btn-primary">
+        <i class="fa-solid fa-rocket group-hover:animate-bounce"></i>
+        Start Building with AgentLink
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Team 规划板块（优化布局和样式） -->
+<section id="workflow" class="py-20 px-6 fade-in">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl font-bold mb-4 gradient-text">Team Planning</h2>
+      <p class="text-gray-400 text-lg">AgentLink 团队规划 · 构建完整的AI Agent生态</p>
+    </div>
+    <div class="grid md:grid-cols-1 gap-8">
+      <!-- 规划项1 -->
+      <div class="plan-item p-8 rounded-2xl bg-card border-l-4 border-primary border border-gray-800">
+        <div class="flex items-start gap-6">
+          <div class="w-14 h-14 rounded-full bg-gradient-to-r from-primary/20 to-neon/20 flex items-center justify-center flex-shrink-0 mt-1 shadow-lg">
+            <i class="fa-solid fa-layer-group text-2xl text-neon"></i>
+          </div>
+          <div>
+            <h3 class="text-xl md:text-2xl font-semibold mb-3 gradient-text">市场定位:AI落地的“摆渡人”</h3>
+            <p class="text-gray-300 leading-relaxed">公司致力于打通AI应用的“最后一公里”，为企业和家庭提供端到端的全栈式Agent解决方案，实现技术与场景的深度融合。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 规划项2 -->
+      <div class="plan-item p-8 rounded-2xl bg-card border-l-4 border-primary border border-gray-800">
+        <div class="flex items-start gap-6">
+          <div class="w-14 h-14 rounded-full bg-gradient-to-r from-primary/20 to-neon/20 flex items-center justify-center flex-shrink-0 mt-1 shadow-lg">
+            <i class="fa-solid fa-puzzle-piece text-2xl text-neon"></i>
+          </div>
+          <div>
+            <h3 class="text-xl md:text-2xl font-semibold mb-3 gradient-text">分层产品矩阵满足多元需求</h3>
+            <p class="text-gray-300 leading-relaxed">服务分为云端Agent、本地部署、技术支持订阅和AI助手一体机四层，分别面向中小企业、大型机构与高端家庭，兼顾可扩展性与安全性。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 规划项3 -->
+      <div class="plan-item p-8 rounded-2xl bg-card border-l-4 border-primary border border-gray-800">
+        <div class="flex items-start gap-6">
+          <div class="w-14 h-14 rounded-full bg-gradient-to-r from-primary/20 to-neon/20 flex items-center justify-center flex-shrink-0 mt-1 shadow-lg">
+            <i class="fa-solid fa-cloud text-2xl text-neon"></i>
+          </div>
+          <div>
+            <h3 class="text-xl md:text-2xl font-semibold mb-3 gradient-text">私有化部署与本地化运行保障安全与性能</h3>
+            <p class="text-gray-300 leading-relaxed">针对大客户支持大模型本地部署与训推一体平台，通过推理优化与算力调度降低TCO；一体机支持离线运行，确保低延迟与数据隐私。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 规划项4 -->
+      <div class="plan-item p-8 rounded-2xl bg-card border-l-4 border-primary border border-gray-800">
+        <div class="flex items-start gap-6">
+          <div class="w-14 h-14 rounded-full bg-gradient-to-r from-primary/20 to-neon/20 flex items-center justify-center flex-shrink-0 mt-1 shadow-lg">
+            <i class="fa-solid fa-handshake-angle text-2xl text-neon"></i>
+          </div>
+          <div>
+            <h3 class="text-xl md:text-2xl font-semibold mb-3 gradient-text">敏捷组织架构支撑高效交付</h3>
+            <p class="text-gray-300 leading-relaxed">采用“前台-中台-后台”模式，客户成功、研发交付与产品创新三部门协同，保障方案设计、技术实现与持续迭代的闭环运作。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 规划项5 -->
+      <div class="plan-item p-8 rounded-2xl bg-card border-l-4 border-primary border border-gray-800">
+        <div class="flex items-start gap-6">
+          <div class="w-14 h-14 rounded-full bg-gradient-to-r from-primary/20 to-neon/20 flex items-center justify-center flex-shrink-0 mt-1 shadow-lg">
+            <i class="fa-solid fa-globe text-2xl text-neon"></i>
+          </div>
+          <div>
+            <h3 class="text-xl md:text-2xl font-semibold mb-3 gradient-text">多元化商业模式实现可持续增长</h3>
+            <p class="text-gray-300 leading-relaxed">收入涵盖项目制、订阅费、硬件销售及培训咨询，结合社区运营与标杆案例打造，形成可复制、可扩展的商业化路径。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 团队板块（增强视觉效果） -->
+<section id="team" class="py-24 px-6 bg-card/50 fade-in">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-20">
+      <h2 class="text-4xl font-bold mb-4 gradient-text">AgentLink Core Team</h2>
+      <p class="text-gray-400 text-lg">专注AI Agent开发的极客团队 · 用技术创造价值</p>
+    </div>
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
+      <div class="p-8 rounded-2xl bg-card border border-gray-800 member-card text-center relative">
+        <div class="w-28 h-28 rounded-full bg-gradient-to-r from-primary/20 to-neon/20 flex items-center justify-center mx-auto mb-8 member-avatar shadow-lg">
+          <i class="fa-solid fa-cat text-6xl text-primary"></i>
+        </div>
+        <h3 class="text-xl font-semibold mb-3 gradient-text">醉清风</h3>
+        <p class="text-sm text-gray-400 leading-relaxed">安防+GPU+大模型背景的技术人。信奉“高高山顶立，深深海底行”——既要看清AI的远方，也要走好落地的每一步。</p>
+      </div>
+      <div class="p-8 rounded-2xl bg-card border border-gray-800 member-card text-center relative">
+        <div class="w-28 h-28 rounded-full bg-gradient-to-r from-primary/20 to-neon/20 flex items-center justify-center mx-auto mb-8 member-avatar shadow-lg">
+          <i class="fa-solid fa-dove text-6xl text-primary"></i>
+        </div>
+        <h3 class="text-xl font-semibold mb-3 gradient-text">Handshake</h3>
+        <p class="text-sm text-gray-400 leading-relaxed">一位在密码行业深耕多年的老兵，一位曾征战GPU战场的工程师，更是一位ALL IN AI Agent的连续创业者。我们不预测未来，我们创造未来！</p>
+      </div>
+      <div class="p-8 rounded-2xl bg-card border border-gray-800 member-card text-center relative">
+        <div class="w-28 h-28 rounded-full bg-gradient-to-r from-primary/20 to-neon/20 flex items-center justify-center mx-auto mb-8 member-avatar shadow-lg">
+          <i class="fa-solid fa-hippo text-6xl text-primary"></i>
+        </div>
+        <h3 class="text-xl font-semibold mb-3 gradient-text">Jarvis</h3>    
+        <p class="text-sm text-gray-400 leading-relaxed">梦想当钢铁侠，梦想拥有自己的Jarvis。一位深入研究商业模型部署，在人脸、车牌领域深耕。“I'm Iron Man，已经成为可能。”</p>
+      </div>
+      <div class="p-8 rounded-2xl bg-card border border-gray-800 member-card text-center relative">
+        <div class="w-28 h-28 rounded-full bg-gradient-to-r from-primary/20 to-neon/20 flex items-center justify-center mx-auto mb-8 member-avatar shadow-lg">
+          <i class="fa-solid fa-horse text-6xl text-primary"></i>
+        </div>
+        <h3 class="text-xl font-semibold mb-3 gradient-text">Handshake</h3>
+        <p class="text-sm text-gray-400 leading-relaxed">一位专注数据挖掘、沉淀多年实战经验的工程师,更是一位探索大模型智能体赋能的实践者。不尚空谈，脚踏实地，用技术实现价值！</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 联系板块（优化视觉和交互） -->
+<section id="contact" class="py-28 px-6 bg-card/70 fade-in">
+  <div class="max-w-4xl mx-auto text-center">
+    <h2 class="text-5xl font-bold mb-8 gradient-text">Contact Us</h2>
+    <p class="text-lg text-gray-300 mb-16 max-w-2xl mx-auto leading-relaxed">
+      AgentLink - 专注大模型应用、智能体开发、企业级 AI 工作流<br>
+      欢迎通过以下渠道联系我们，一起探索 AI Agent 的无限可能
+    </p>
+    
+    <!-- 核心社交图标区域 -->
+    <div class="flex justify-center gap-10 mb-16 flex-wrap">
+      <a href="https://github.com" target="_blank" class="text-primary social-icon" title="GitHub">
+        <i class="fa-brands fa-github text-2xl"></i>
+      </a>
+      <a href="https://twitter.com" target="_blank" class="text-primary social-icon" title="Twitter/X">
+        <i class="fa-brands fa-twitter text-2xl"></i>
+      </a>
+      <a href="https://xiaohongshu.com" target="_blank" class="text-primary social-icon" title="小红书">
+        <i class="fa-solid fa-book-open-reader text-2xl"></i>
+      </a>
+    </div>
+    
+    <button onclick="openModal()" class="bg-gradient-to-r from-primary to-neon hover:from-primary/90 hover:to-neon/90 text-white px-10 py-5 rounded-lg transition hover:scale-105 hover:shadow-glow-hover active:scale-95 flex items-center justify-center gap-3 mx-auto text-lg group btn-primary">
+      <i class="fa-solid fa-paper-plane group-hover:animate-pulse"></i>
+      Get In Touch With AgentLink Team
+    </button>
+  </div>
+</section>
+
+<!-- 弹窗（美化样式） -->
+<div id="modal" class="modal-backdrop">
+  <div class="modal-content absolute top-1/2 left-1/2 w-full max-w-lg bg-card border border-gray-700/80 rounded-2xl p-8 shadow-xl shadow-primary/20 transform scale-95">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-2xl font-bold gradient-text">AgentLink Developer Portal</h3>
+      <button onclick="closeModal()" class="text-gray-400 hover:text-neon text-2xl transition hover:rotate-90 p-2">&times;</button>
+    </div>
+    <p class="text-gray-300 mb-8 leading-relaxed">欢迎使用 AgentLink 开发平台<br>扫码关注我们，获取最新的AI Agent开发资源：</p>
+ <div class="flex justify-center mb-6">
+  <!-- 科技风二维码（SVG格式，可直接替换成你的真实二维码链接） -->
+  <div class="relative">
+    <img src="./pic/qlmwechat.jpg" alt="AgentLink科技风二维码" 
+         class="w-48 h-48 object-cover rounded-lg shadow-lg shadow-neon/40 border border-primary/30">
+    <!-- 科技风装饰层 -->
+    <div class="absolute inset-0 rounded-lg border border-neon/20 bg-gradient-to-br from-primary/5 to-neon/5 pointer-events-none"></div>
+  </div>
+</div>
+    <div class="flex justify-end gap-4">
+      <button onclick="closeModal()" class="px-6 py-3 border border-gray-600 rounded hover:border-neon transition hover:scale-105 text-gray-200">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 页脚（美化样式） -->
+<footer class="bg-darkbg border-t border-gray-800/80 py-10 text-center text-gray-500 text-sm">
+  <div class="max-w-6xl mx-auto">
+    <div class="flex justify-center items-center mb-4">
+      <i class="fa-solid fa-link text-primary mr-2"></i>
+      <span class="gradient-text text-lg font-medium">AgentLink</span>
+    </div>
+    <p>© 2026 AgentLink AI Agent Developer Platform • All Rights Reserved</p>
+    <p class="mt-2 text-xs opacity-70">让AI落地，让智能触手可及</p>
+  </div>
+</footer>
+
+<script>
+  // 弹窗控制 - 优化动画
+  const modal = document.getElementById('modal');
+  function openModal() {
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden'; // 防止背景滚动
+    setTimeout(() => modal.classList.add('show'), 10);
+  }
+  function closeModal() {
+    modal.classList.remove('show');
+    document.body.style.overflow = ''; // 恢复滚动
+    setTimeout(() => modal.style.display = 'none', 400);
+  }
+
+  // 点击空白关闭
+  modal.onclick = function(e) {
+    if (e.target === modal) closeModal();
+  }
+
+  // 滚动渐入动画
+  document.addEventListener('DOMContentLoaded', function() {
+    // 导航栏滚动效果增强
+    window.addEventListener('scroll', function() {
+      const nav = document.getElementById('navbar');
+      if (window.scrollY > 50) {
+        nav.classList.add('shadow-lg', 'shadow-primary/10');
+        nav.classList.remove('py-4');
+        nav.classList.add('py-3', 'bg-darkbg/98');
+      } else {
+        nav.classList.remove('shadow-lg', 'shadow-primary/10');
+        nav.classList.remove('py-3', 'bg-darkbg/98');
+        nav.classList.add('py-4');
+      }
+
+      // 滚动渐入
+      const fadeElements = document.querySelectorAll('.fade-in');
+      fadeElements.forEach(el => {
+        const rect = el.getBoundingClientRect();
+        const isVisible = (rect.top <= window.innerHeight - 100);
+        if (isVisible) {
+          el.classList.add('visible');
+        }
+      });
+    });
+
+    // 初始触发一次滚动检查
+    window.dispatchEvent(new Event('scroll'));
+
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      });
+    });
+
+    // 添加页面载入动画
+    document.body.classList.add('loaded');
+  });
+</script>
+
+</body>
+</html>
